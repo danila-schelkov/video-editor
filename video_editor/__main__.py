@@ -2,18 +2,16 @@ import json
 import os
 from pathlib import Path
 
-from moviepy.video.io.VideoFileClip import VideoFileClip
 from progress.bar import IncrementalBar
 
 from video_editor.actions import create_actions_from_settings
+from video_editor.actions.clip_data import ClipData
 from video_editor.actions.factories.default_action_factory import DefaultActionFactory
 
 ACTIONS_FILENAME = "actions.json"
 
 VIDEOS_PATH = Path("videos")
 VIDEOS_PATH.mkdir(exist_ok=True)
-
-EDITED_VIDEOS_DIRECTORY_NAME = "edited"
 
 
 def main():
@@ -33,34 +31,20 @@ def main():
             f"Editing videos in {dirpath!r}", max=len(filenames)
         ) as bar:
             for filename in filenames:
+                clip_data = ClipData(dirpath, filename)
+
                 with IncrementalBar(
                     "Handling actions", max=len(actions)
                 ) as actions_bar:
-                    video_file_path = Path(dirpath, filename)
-
-                    # TODO: check is video (of format?) action
-                    if video_file_path == actions_file_path:
-                        continue
-
-                    # TODO: open action
-                    clip = VideoFileClip(str(video_file_path))
-
+                    clip = None
                     for action in actions:
+                        action.set_clip_data(clip_data)
                         clip = action.handle(clip)
+
+                        if action.should_break():
+                            break
+
                         actions_bar.next()
-
-                    # TODO: save action
-                    edited_file_path = Path(
-                        dirpath, EDITED_VIDEOS_DIRECTORY_NAME, filename
-                    )
-                    edited_file_path.parent.mkdir(exist_ok=True)
-
-                    clip.write_videofile(
-                        str(edited_file_path),
-                        verbose=False,
-                        logger=None,
-                        codec="libx264",
-                    )
 
                 bar.next()
 
