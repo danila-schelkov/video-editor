@@ -7,6 +7,7 @@ from progress.bar import IncrementalBar
 from video_editor.actions import create_actions_from_settings
 from video_editor.actions.clip_data import ClipData
 from video_editor.actions.factories.default_action_factory import DefaultActionFactory
+from video_editor.console import move_cursor_down, move_cursor_up
 
 ACTIONS_FILENAME = "actions.json"
 
@@ -33,6 +34,7 @@ def main():
             for filename in filenames:
                 clip_data = ClipData(dirpath, filename)
 
+                move_cursor_down()
                 with IncrementalBar(
                     "Handling actions", max=len(actions)
                 ) as actions_bar:
@@ -45,6 +47,8 @@ def main():
                             break
 
                         actions_bar.next()
+
+                move_cursor_up(2)
 
                 bar.next()
 
